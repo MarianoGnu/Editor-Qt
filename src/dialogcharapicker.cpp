@@ -17,10 +17,10 @@ DialogCharaPicker::DialogCharaPicker(QWidget *parent, bool tile_pick) :
         QGraphicsPixmapItem *tileItem = new QGraphicsPixmapItem();
         QPixmap pix(96, 384);
         pix.fill(QColor(0,0,0,0));
-        mCore->beginPainting(pix);
+        QPainter *p = new QPainter(&pix);
         for (short i = 0; i < 144; i++)
-            mCore->renderTile(10000+i, QRect((i%6)*16,i/6*16,16,16));
-        mCore->endPainting();
+            mCore->renderTile(p, 10000+i, QRect((i%6)*16,i/6*16,16,16));
+        p->end();
         tileItem->setPixmap(pix);
         tileItem->setScale(2.0);
         m_tileScene = new QGraphicsPickerScene(ui->graphicsTile, tileItem, 24, 6);

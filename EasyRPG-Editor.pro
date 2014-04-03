@@ -38,7 +38,8 @@ SOURCES += src/mainwindow.cpp \
     src/tools/QEventWidget.cpp \
     src/tools/QGraphicsPickerScene.cpp \
     src/tools/qeventwidget_init.cpp \
-    src/dialogsplash.cpp
+    src/dialogsplash.cpp \
+    src/tools/QGraphicsLayerItem.cpp
 
 HEADERS  += src/mainwindow.h \
     src/dialogresourcemanager.h \
@@ -64,7 +65,8 @@ HEADERS  += src/mainwindow.h \
     src/dialogcharapicker.h \
     src/tools/QGraphicsCharaItem.h \
     src/tools/QGraphicsPickerScene.h \
-    src/dialogsplash.h
+    src/dialogsplash.h \
+    src/tools/QGraphicsLayerItem.h
 
 FORMS    += src/mainwindow.ui \
     src/dialogresourcemanager.ui \

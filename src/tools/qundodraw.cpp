@@ -13,5 +13,5 @@ QUndoCommand(parent)
 
 void QUndoDraw::undo()
 {
-    m_scene->setLayerData(m_layer, m_data);
+//    m_scene->setLayerData(m_layer, m_data);
 }

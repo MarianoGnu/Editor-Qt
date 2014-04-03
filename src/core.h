@@ -127,9 +127,7 @@ public:
     QString gameTitle();
     void setGameTitle(const QString &gameTitle);
 
-    void beginPainting(QPixmap &dest);
-    void renderTile(const short &tile_id, const QRect &dest_rect);
-    void endPainting();
+    void renderTile(QPainter *painter, const short &tile_id, QRect dest_rect);
 
     QColor keycolor();
 

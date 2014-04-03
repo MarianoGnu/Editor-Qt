@@ -1,6 +1,7 @@
 #include "qeventwidget.h"
 #include "ui_qeventwidget.h"
 #include <QDialogButtonBox>
+#include <QPainter>
 #include <data.h>
 #include "../dialogcharapicker.h"
 #include "../core.h"
@@ -340,9 +341,9 @@ void QEventWidget::updateGraphic()
     {
         QPixmap pix(16,16);
         pix.fill(QColor(0,0,0,0));
-        mCore->beginPainting(pix);
-        mCore->renderTile(10000+m_eventPage->character_index,QRect(0,0,16,16));
-        mCore->endPainting();
+        QPainter *p = new QPainter(&pix);
+        mCore->renderTile(p, 10000+m_eventPage->character_index,QRect(0,0,16,16));
+        p->end();
         m_tileItem->setPixmap(pix);
         m_tileItem->setVisible(true);
         m_charaItem->setVisible(false);

@@ -675,7 +675,7 @@ QGraphicsView *MainWindow::getView(int id)
         ui->tabMap->addTab(view,
                            QIcon(":/icons/share/old_map.png"),
                            QString::fromStdString(mapName));
-        view->setScene(new QGraphicsMapScene(id, view, view));
+        view->setScene(new QGraphicsMapScene(id, view));
         connect(getScene(id),
                 SIGNAL(actionRunHereTriggered(int,int,int)),
                 this,
