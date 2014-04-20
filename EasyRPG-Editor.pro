@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui multimedia
+qtHaveModule(opengl): QT += opengl
 win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -38,7 +39,8 @@ SOURCES += src/mainwindow.cpp \
     src/tools/qgraphicsimportitem.cpp \
     src/tools/qgraphicsmapscene.cpp \
     src/tools/qgraphicspaletescene.cpp \
-    src/tools/qgraphicspickerscene.cpp
+    src/tools/qgraphicspickerscene.cpp \
+    src/tools/qgraphicslayeritem.cpp
 
 HEADERS  += src/mainwindow.h \
     src/dialogresourcemanager.h \
@@ -64,7 +66,8 @@ HEADERS  += src/mainwindow.h \
     src/tools/qgraphicsimportitem.h \
     src/tools/qgraphicsmapscene.h \
     src/tools/qgraphicspaletescene.h \
-    src/tools/qgraphicspickerscene.h
+    src/tools/qgraphicspickerscene.h \
+    src/tools/qgraphicslayeritem.h
 
 FORMS    += src/mainwindow.ui \
     src/dialogresourcemanager.ui \

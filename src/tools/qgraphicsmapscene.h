@@ -12,6 +12,7 @@
 #include <memory>
 #include <rpg_map.h>
 #include <rpg_mapinfo.h>
+#include "qgraphicslayeritem.h"
 #include "../core.h"
 
 class QGraphicsMapScene : public QGraphicsScene
@@ -77,14 +78,9 @@ private:
     int _x(int index);
     int _y(int index);
     int _index(int x, int y);
-    void redrawTile(const Core::Layer &layer,
-                    const int &x,
-                    const int &y,
-                    const QRect &dest_rec);
     void stopDrawing();
     void stopSelecting();
     void updateArea(int x1, int y1, int x2, int y2);
-    void redrawLayer(Core::Layer layer);
     void drawPen();
     void drawRect();
     void drawFill(int terrain_id, int x, int y);
@@ -92,8 +88,8 @@ private:
 
 
     QMenu *m_eventMenu;
-    QGraphicsPixmapItem *m_lowerpix;
-    QGraphicsPixmapItem *m_upperpix;
+    QGraphicsLayerItem *m_lowerpix;
+    QGraphicsLayerItem *m_upperpix;
     QVector<QGraphicsPixmapItem*> m_eventpixs;
     QVector<QGraphicsLineItem*> m_lines;
     QUndoStack *m_undoStack;
@@ -104,7 +100,6 @@ private:
     std::vector<short> m_upper;
     float m_scale;
     bool m_init;
-    int s_tileSize;
     int cur_x;
     int cur_y;
     int fst_x;

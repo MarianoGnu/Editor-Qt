@@ -534,7 +534,15 @@ void Core::LoadChipset(int n_chipsetid)
 void Core::LoadBackground(QString name)
 {
     if (name.isEmpty())
-        m_background = new QPixmap();
+    {
+        m_background = new QPixmap(mCore->tileSize(), mCore->tileSize());
+        QPainter p(m_background);
+        p.fillRect(0, 0, mCore->tileSize(), mCore->tileSize(), Qt::magenta);
+        p.fillRect(0, 0, mCore->tileSize()/2, mCore->tileSize()/2, Qt::darkMagenta);
+        p.fillRect(mCore->tileSize()/2, mCore->tileSize()/2,
+                   mCore->tileSize()/2, mCore->tileSize()/2, Qt::darkMagenta);
+        p.end();
+    }
     else
         m_background = new QPixmap(filePath(PANORAMA, name));
 }
@@ -664,26 +672,12 @@ void Core::setProjectFolder(const QString &projectFolder)
     m_projectFolder = projectFolder;
 }
 
-
-
-void Core::beginPainting(QPixmap &dest)
-{
-    m_painter.begin(&dest);
-    if (m_painter.isActive())
-        m_painter.setBackground(QBrush(*m_background));
-}
-
-void Core::renderTile(const short &tile_id, const QRect &dest_rect)
+void Core::renderTile(QPainter *painter, const short &tile_id, const QRect &dest_rect)
 {
 
     if (tile_id < 10000)
-        m_painter.fillRect(dest_rect, QBrush(*m_background));
-    m_painter.drawPixmap(dest_rect, m_tileCache[tile_id]);
-}
-
-void Core::endPainting()
-{
-    m_painter.end();
+        painter->fillRect(dest_rect, QBrush(*m_background));
+    painter->drawPixmap(dest_rect, m_tileCache[tile_id]);
 }
 
 QColor Core::keycolor()

@@ -59,11 +59,10 @@ QGraphicsMapScene::QGraphicsMapScene(int id, QGraphicsView *view, QObject *paren
     connect(actions[2],SIGNAL(triggered()),this,SLOT(on_actionNewEvent()));
 
     m_eventMenu->addActions(actions);
-    m_lowerpix = new QGraphicsPixmapItem();
-    m_upperpix = new QGraphicsPixmapItem();
-    addItem(m_lowerpix);
-    addItem(m_upperpix);
+    m_lowerpix = 0;
+    m_upperpix = 0;
     Load();
+    setSceneRect(0,0,m_map->width*mCore->tileSize(),m_map->height*mCore->tileSize());
     m_drawing = false;
     m_cancelled = false;
     m_selecting = false;
@@ -155,7 +154,7 @@ int QGraphicsMapScene::id() const
 
 int QGraphicsMapScene::chipsetId() const
 {
-    return m_map.get()->chipset_id;
+    return m_map->chipset_id;
 }
 
 void QGraphicsMapScene::setLayerData(Core::Layer layer, std::vector<short> data)
@@ -163,28 +162,28 @@ void QGraphicsMapScene::setLayerData(Core::Layer layer, std::vector<short> data)
     if (layer == Core::LOWER)
     {
         m_lower = data;
-        m_map.get()->lower_layer = data;
+        m_map->lower_layer = data;
     }
     else
     {
         m_upper = data;
-        m_map.get()->upper_layer = data;
+        m_map->upper_layer = data;
     }
-    redrawLayer(layer);
+    update(m_view->visibleRegion().boundingRect());
 }
 
 void QGraphicsMapScene::setEventData(int id, const RPG::Event &data)
 {
-    for (unsigned int i = 0; i < m_map.get()->events.size(); i++)
-        if (m_map.get()->events[i].ID == id)
-            m_map.get()->events[i] = data;
+    for (unsigned int i = 0; i < m_map->events.size(); i++)
+        if (m_map->events[i].ID == id)
+            m_map->events[i] = data;
 }
 
 QMap<int, RPG::Event*> *QGraphicsMapScene::mapEvents()
 {
     QMap<int, RPG::Event*> *events = new QMap<int, RPG::Event*>();
-    for (unsigned int i = 0; i < m_map.get()->events.size(); i++)
-        events->insert(m_map.get()->events[i].ID, &m_map.get()->events[i]);
+    for (unsigned int i = 0; i < m_map->events.size(); i++)
+        events->insert(m_map->events[i].ID, &m_map->events[i]);
     return events;
 }
 
@@ -192,22 +191,15 @@ void QGraphicsMapScene::redrawMap()
 {
     if (!m_init)
         return;
-    mCore->LoadChipset(m_map.get()->chipset_id);
-    s_tileSize = mCore->tileSize()*m_scale;
-    redrawLayer(Core::LOWER);
-    redrawLayer(Core::UPPER);
+    mCore->LoadChipset(m_map->chipset_id);
+    update(m_view->visibleRegion().boundingRect());
 }
 
 void QGraphicsMapScene::setScale(float scale)
 {
     m_scale = scale;
-    for (int i = 0; i < m_lines.count(); i++)
-        m_lines[i]->setScale(m_scale);
-    this->setSceneRect(0,
-                       0,
-                       m_map.get()->width* mCore->tileSize()*m_scale,
-                       m_map.get()->height* mCore->tileSize()*m_scale);
-    redrawMap();
+    m_view->resetTransform();
+    m_view->scale(scale, scale);
 }
 
 void QGraphicsMapScene::onLayerChanged()
@@ -310,31 +302,45 @@ void QGraphicsMapScene::Load()
        << m_mapInfo->ID
        << ".emu";
     m_map = LMU_Reader::LoadXml(ss.str());
-    m_lower =  m_map.get()->lower_layer;
-    m_upper =  m_map.get()->upper_layer;
-    if(m_map.get()->parallax_flag)
-        mCore->LoadBackground(m_map.get()->parallax_name.c_str());
+    m_lower =  m_map->lower_layer;
+    m_upper =  m_map->upper_layer;
+    if (m_lowerpix)
+    {
+        removeItem(m_lowerpix);
+        delete m_lowerpix;
+    }
+    if (m_upperpix)
+    {
+        removeItem(m_upperpix);
+        delete m_upperpix;
+    }
+    m_lowerpix = new QGraphicsLayerItem(m_lower, m_map->width, m_map->height);
+    m_upperpix = new QGraphicsLayerItem(m_upper, m_map->width, m_map->height);
+    addItem(m_lowerpix);
+    addItem(m_upperpix);
+    if(m_map->parallax_flag)
+        mCore->LoadBackground(m_map->parallax_name.c_str());
     else
         mCore->LoadBackground(QString());
     for (int i = 0; i < m_lines.count(); i++)
         removeItem(m_lines[i]);
     m_lines.clear();
-    for (int x = 0; x <= m_map.get()->width; x++)
+    for (int x = 0; x <= m_map->width; x++)
     {
         QGraphicsLineItem* line = new QGraphicsLineItem(x*mCore->tileSize(),
                                                         0,
                                                         x*mCore->tileSize(),
-                                                        m_map.get()->height*mCore->tileSize());
+                                                        m_map->height*mCore->tileSize());
         m_lines.append(line);
         line->setScale(m_scale);
         line->setVisible(mCore->layer() == Core::EVENT);
         addItem(line);
     }
-    for (int y = 0; y <= m_map.get()->height; y++)
+    for (int y = 0; y <= m_map->height; y++)
     {
         QGraphicsLineItem* line = new QGraphicsLineItem(0,
                                                         y*mCore->tileSize(),
-                                                        m_map.get()->width*mCore->tileSize(),
+                                                        m_map->width*mCore->tileSize(),
                                                         y*mCore->tileSize());
         m_lines.append(line);
         line->setScale(m_scale);
@@ -454,7 +460,7 @@ void QGraphicsMapScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 drawFill(mCore->translate(m_lower[_index(fst_x,fst_y)]),fst_x,fst_y);
             else if (mCore->layer() == Core::UPPER)
                 drawFill(mCore->translate(m_upper[_index(fst_x,fst_y)]),fst_x,fst_y);
-            updateArea(0, 0, m_map.get()->width-1 ,m_map.get()->height-1);
+            updateArea(0, 0, m_map->width-1 ,m_map->height-1);
         }
     }
     if(event->button() == Qt::RightButton) //StartSelecting
@@ -467,10 +473,11 @@ void QGraphicsMapScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (!sceneRect().contains(event->scenePos()))
         return;
-    if (cur_x == event->scenePos().x()/s_tileSize && cur_y == event->scenePos().y()/s_tileSize)
+    if (cur_x == event->scenePos().x() / mCore->tileSize() &&
+            cur_y == event->scenePos().y() / mCore->tileSize())
         return;
-    cur_x = event->scenePos().x()/s_tileSize;
-    cur_y = event->scenePos().y()/s_tileSize;
+    cur_x = event->scenePos().x() / mCore->tileSize();
+    cur_y = event->scenePos().y() / mCore->tileSize();
     if (m_drawing)
     {
         switch (mCore->tool())
@@ -500,16 +507,16 @@ void QGraphicsMapScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (mCore->layer() == Core::LOWER)
         {
             m_undoStack->push(new QUndoDraw(Core::LOWER,
-                                            m_map.get()->lower_layer,
+                                            m_map->lower_layer,
                                             this));
-            m_map.get()->lower_layer = m_lower;
+            m_map->lower_layer = m_lower;
         }
         else
         {
             m_undoStack->push(new QUndoDraw(Core::UPPER,
-                                            m_map.get()->upper_layer,
+                                            m_map->upper_layer,
                                             this));
-            m_map.get()->upper_layer = m_upper;
+            m_map->upper_layer = m_upper;
         }
         emit mapChanged();
     }
@@ -520,11 +527,11 @@ void QGraphicsMapScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     Q_UNUSED(event)
     if (mCore->layer() != Core::EVENT)
         return;
-    for (unsigned int i = 0; i < m_map.get()->events.size(); i++)
-        if (_index(cur_x,cur_y) == _index(m_map.get()->events[i].x,m_map.get()->events[i].y))
+    for (unsigned int i = 0; i < m_map->events.size(); i++)
+        if (_index(cur_x,cur_y) == _index(m_map->events[i].x,m_map->events[i].y))
         {
-            RPG::Event backup = m_map.get()->events[i];
-            int result = DialogEvent::edit(m_view, &m_map.get()->events[i]);
+            RPG::Event backup = m_map->events[i];
+            int result = DialogEvent::edit(m_view, &m_map->events[i]);
             if (result != QDialogButtonBox::Cancel)
             {
                 m_undoStack->push(new QUndoEvent(backup,
@@ -536,35 +543,17 @@ void QGraphicsMapScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 int QGraphicsMapScene::_x(int index)
 {
-    return (index%m_map.get()->width);
+    return (index%m_map->width);
 }
 
 int QGraphicsMapScene::_y(int index)
 {
-    return (index/m_map.get()->width);
+    return (index/m_map->width);
 }
 
 int QGraphicsMapScene::_index(int x, int y)
 {
-    return (m_map.get()->width*y+x);
-}
-
-void QGraphicsMapScene::redrawTile(const Core::Layer &layer,
-                                   const int &x,
-                                   const int &y,
-                                   const QRect &dest_rec)
-{
-    switch (layer)
-    {
-    case (Core::LOWER):
-        mCore->renderTile(m_lower[_index(x,y)],dest_rec);
-        break;
-    case (Core::UPPER):
-        mCore->renderTile(m_upper[_index(x,y)],dest_rec);
-        break;
-    default:
-        break;
-    }
+    return (m_map->width*y+x);
 }
 
 void QGraphicsMapScene::stopDrawing()
@@ -572,10 +561,9 @@ void QGraphicsMapScene::stopDrawing()
     m_cancelled = true;
     m_drawing = false;
     m_lowerpix->setCursor(QCursor(QPixmap(":/icons/share/cur_cancel.png"),1,1));
-    m_lower = m_map.get()->lower_layer;
-    m_upper = m_map.get()->upper_layer;
-    redrawLayer(Core::LOWER);
-    redrawLayer(Core::UPPER);
+    m_lower = m_map->lower_layer;
+    m_upper = m_map->upper_layer;
+    update(m_view->visibleRegion().boundingRect());
 }
 
 void QGraphicsMapScene::stopSelecting()
@@ -593,10 +581,10 @@ void QGraphicsMapScene::updateArea(int x1, int y1, int x2, int y2)
         x1 = 0;
     if (y1 < 0)
         y1 = 0;
-    if (x2 >= m_map.get()->width)
-        x2 = m_map.get()->width - 1;
-    if (y2 >= m_map.get()->height)
-        y2 = m_map.get()->height - 1;
+    if (x2 >= m_map->width)
+        x2 = m_map->width - 1;
+    if (y2 >= m_map->height)
+        y2 = m_map->height - 1;
 
     for (int x = x1; x <= x2; x++)
         for (int y = y1; y <= y2; y++)
@@ -609,60 +597,7 @@ void QGraphicsMapScene::updateArea(int x1, int y1, int x2, int y2)
             }
 
         }
-    redrawLayer(mCore->layer());
-}
-
-void QGraphicsMapScene::redrawLayer(Core::Layer layer)
-{
-    QSize size = m_view->size();
-    if (size.width() > m_map.get()->width*s_tileSize)
-        size.setWidth(m_map.get()->width*s_tileSize);
-    else
-        size.setWidth(size.width()+s_tileSize);
-    if (size.height() > m_map.get()->height*s_tileSize)
-        size.setHeight(m_map.get()->height*s_tileSize);
-    else
-        size.setHeight(size.height()+s_tileSize);
-    int start_x = m_view->horizontalScrollBar()->value()/s_tileSize;
-    int start_y = start_y = m_view->verticalScrollBar()->value()/s_tileSize;
-    int end_x = start_x+(size.width()-1)/s_tileSize;
-    int end_y = start_y+(size.height()-1)/s_tileSize;
-    QPixmap pix(size);
-    pix.fill(QColor(0,0,0,0));
-    mCore->beginPainting(pix);
-    for (int x = start_x; x <= end_x; x++)
-        for (int y = start_y; y <= end_y; y++)
-        {
-            if (x >= m_map.get()->width || y >= m_map.get()->height)
-                continue;
-            QRect dest_rect((x-start_x)* s_tileSize,
-                       (y-start_y)* s_tileSize,
-                       s_tileSize,
-                       s_tileSize);
-            redrawTile(layer, x, y, dest_rect);
-        }
-    if (layer == Core::UPPER)
-    {
-        for (unsigned int i = 0; i <  m_map.get()->events.size(); i++)
-        {
-            QRect rect((m_map.get()->events[i].x-start_x)* s_tileSize,
-                       (m_map.get()->events[i].y-start_y)* s_tileSize,
-                       s_tileSize,
-                       s_tileSize);
-            mCore->renderTile(EV, rect);
-        }
-    }
-    mCore->endPainting();
-    if (layer == Core::LOWER)
-    {
-        m_lowerpix->setPixmap(pix);
-        m_lowerpix->setPos(start_x*s_tileSize,start_y*s_tileSize);
-    }
-    else
-    {
-        m_upperpix->setPixmap(pix);
-        m_upperpix->setPos(start_x*s_tileSize,start_y*s_tileSize);
-    }
+    update(m_view->visibleRegion().boundingRect());
 }
 
 void QGraphicsMapScene::drawPen()
@@ -683,10 +618,10 @@ void QGraphicsMapScene::drawRect()
     switch (mCore->layer())
     {
     case (Core::LOWER):
-        m_lower = m_map.get()->lower_layer;
+        m_lower = m_map->lower_layer;
         break;
     case (Core::UPPER):
-        m_upper = m_map.get()->upper_layer;
+        m_upper = m_map->upper_layer;
         break;
     }
 
@@ -707,7 +642,7 @@ void QGraphicsMapScene::drawRect()
 
 void QGraphicsMapScene::drawFill(int terrain_id, int x, int y)
 {
-    if (x < 0 || x >= m_map.get()->width || y < 0 || y >= m_map.get()->height)
+    if (x < 0 || x >= m_map->width || y < 0 || y >= m_map->height)
         return;
     if (terrain_id == mCore->selection(x-fst_x,y-fst_y))
         return;
@@ -747,20 +682,20 @@ short QGraphicsMapScene::bind(int x, int y)
     {
         if (y > 0 && terrain_id != tile_u)
             u = UP;
-        if (y < m_map.get()->height-1 && terrain_id != tile_d)
+        if (y < m_map->height-1 && terrain_id != tile_d)
             d = DOWN;
         if (x > 0 && terrain_id != tile_l)
             l = LEFT;
-        if (x < m_map.get()->width-1 && terrain_id != tile_r)
+        if (x < m_map->width-1 && terrain_id != tile_r)
             r = RIGHT;
         if (u+l == 0 && x > 0 && y > 0 && terrain_id != tile_ul)
             ul = UPLEFT;
-        if (u+r == 0 && x < m_map.get()->width-1 && y > 0 && terrain_id != tile_ur)
+        if (u+r == 0 && x < m_map->width-1 && y > 0 && terrain_id != tile_ur)
             ur = UPRIGHT;
-        if (d+l == 0 && x > 0 && y < m_map.get()->height-1 && terrain_id != tile_dl)
+        if (d+l == 0 && x > 0 && y < m_map->height-1 && terrain_id != tile_dl)
             dl = DOWNLEFT;
-        if (d+r == 0 && x < m_map.get()->width-1 &&
-                y < m_map.get()->height-1 && terrain_id != tile_dr)
+        if (d+r == 0 && x < m_map->width-1 &&
+                y < m_map->height-1 && terrain_id != tile_dr)
             dr = DOWNRIGHT;
         _code = u+d+l+r+ul+ur+dl+dr;
     }
@@ -769,23 +704,23 @@ short QGraphicsMapScene::bind(int x, int y)
         if (y > 0 && (!mCore->isWater(tile_u) &&
                       !mCore->isAnimation(tile_u)))
             u = UP;
-        if (y < m_map.get()->height-1 && (!mCore->isWater(tile_d) &&
+        if (y < m_map->height-1 && (!mCore->isWater(tile_d) &&
                                           !mCore->isAnimation(tile_d)))
             d = DOWN;
         if (x > 0 && (!mCore->isWater(tile_l) &&
                       !mCore->isAnimation(tile_l)))
             l = LEFT;
-        if (x < m_map.get()->width-1 && (!mCore->isWater(tile_r) &&
+        if (x < m_map->width-1 && (!mCore->isWater(tile_r) &&
                                          !mCore->isAnimation(tile_r)))
             r = RIGHT;
         if ((u+l) == 0 && x > 0 && y > 0 && !mCore->isWater(tile_ul))
             ul = UPLEFT;
-        if ((u+r) == 0 && x < m_map.get()->width-1 && y > 0 && !mCore->isWater(tile_ur))
+        if ((u+r) == 0 && x < m_map->width-1 && y > 0 && !mCore->isWater(tile_ur))
             ur = UPRIGHT;
-        if ((d+l) == 0 && x > 0 && y < m_map.get()->height-1 && !mCore->isWater(tile_dl))
+        if ((d+l) == 0 && x > 0 && y < m_map->height-1 && !mCore->isWater(tile_dl))
             dl = DOWNLEFT;
-        if ((d+r) == 0 && x < m_map.get()->width-1 &&
-                y < m_map.get()->height-1 && !mCore->isWater(tile_dr))
+        if ((d+r) == 0 && x < m_map->width-1 &&
+                y < m_map->height-1 && !mCore->isWater(tile_dr))
             dr = DOWNRIGHT;
         _code = u+d+l+r+ul+ur+dl+dr;
         // DeepWater Special Corners
@@ -793,11 +728,11 @@ short QGraphicsMapScene::bind(int x, int y)
         {
             if (x > 0 && y > 0 && mCore->isABWater(tile_u) && mCore->isABWater (tile_l) && mCore->isABWater (tile_ul))
                 sul = UPLEFT;
-            if (x < m_map.get()->width-1 && y > 0 && mCore->isABWater(tile_u) && mCore->isABWater (tile_r) && mCore->isABWater (tile_ur))
+            if (x < m_map->width-1 && y > 0 && mCore->isABWater(tile_u) && mCore->isABWater (tile_r) && mCore->isABWater (tile_ur))
                 sur = UPRIGHT;
-            if (x > 0 && y < m_map.get()->height-1 && mCore->isABWater(tile_d) && mCore->isABWater (tile_l) && mCore->isABWater (tile_dl))
+            if (x > 0 && y < m_map->height-1 && mCore->isABWater(tile_d) && mCore->isABWater (tile_l) && mCore->isABWater (tile_dl))
                 sdl = DOWNLEFT;
-            if (x < m_map.get()->width-1 && y < m_map.get()->height-1 &&
+            if (x < m_map->width-1 && y < m_map->height-1 &&
                     mCore->isABWater(tile_d) && mCore->isABWater (tile_r) && mCore->isABWater (tile_dr))
                 sdr = DOWNRIGHT;
         }
@@ -805,11 +740,11 @@ short QGraphicsMapScene::bind(int x, int y)
         {
             if (x > 0 && y > 0 && mCore->isDWater (tile_u) && mCore->isDWater (tile_l) && mCore->isWater(tile_ul))
                 sul = UPLEFT;
-            if (x < m_map.get()->width-1 && y > 0 && mCore->isDWater (tile_u) && mCore->isDWater (tile_r) && mCore->isWater(tile_ur))
+            if (x < m_map->width-1 && y > 0 && mCore->isDWater (tile_u) && mCore->isDWater (tile_r) && mCore->isWater(tile_ur))
                 sur = UPRIGHT;
-            if (x > 0 && y < m_map.get()->height-1 && mCore->isDWater (tile_d) && mCore->isDWater (tile_l) && mCore->isWater(tile_dl))
+            if (x > 0 && y < m_map->height-1 && mCore->isDWater (tile_d) && mCore->isDWater (tile_l) && mCore->isWater(tile_dl))
                 sdl = DOWNLEFT;
-            if (x < m_map.get()->width-1 && y < m_map.get()->height-1 &&
+            if (x < m_map->width-1 && y < m_map->height-1 &&
                     mCore->isDWater (tile_d) && mCore->isDWater (tile_r) && mCore->isWater(tile_dr))
                 sdr = DOWNRIGHT;
         }

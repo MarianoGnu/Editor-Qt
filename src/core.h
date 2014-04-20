@@ -127,9 +127,7 @@ public:
     QString gameTitle();
     void setGameTitle(const QString &gameTitle);
 
-    void beginPainting(QPixmap &dest);
-    void renderTile(const short &tile_id, const QRect &dest_rect);
-    void endPainting();
+    void renderTile(QPainter *painter, const short &tile_id, const QRect &dest_rect);
 
     QColor keycolor();
 
@@ -173,7 +171,6 @@ private:
     RPG::Map *m_map;
     RPG::Chipset m_chipset;
     int m_tileSize;
-    QPainter m_painter;
     QString m_gameTitle;
     QString m_defDir;
     QString m_projectFolder;

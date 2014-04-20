@@ -26,6 +26,9 @@
 #include "rpg_map.h"
 #include "rpg_mapinfo.h"
 #include "data.h"
+#ifndef QT_NO_OPENGL
+    #include <QGLWidget>
+#endif
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<float>)
@@ -663,6 +666,14 @@ QGraphicsView *MainWindow::getView(int id)
     {
         //create
         view = new QGraphicsView(this);
+        view->setRenderHint(QPainter::Antialiasing, false);
+        view->setDragMode(QGraphicsView::RubberBandDrag);
+        view->setOptimizationFlags(QGraphicsView::DontSavePainterState);
+        view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+        view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+#ifndef QT_NO_OPENGL
+        view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+#endif
         m_views[id] = view;
         view->setTransformationAnchor(QGraphicsView::NoAnchor);
         std::string mapName;
