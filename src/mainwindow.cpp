@@ -88,7 +88,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Hide map ids
     ui->treeMap->hideColumn(1);
     // Created hardcoded toolbar for palette window.
-    ui->toolBar->setParent(ui->dockWidgetContents);
+    ui->widgetBar->layout()->addWidget(ui->toolBar);
+    ui->widgetBar2->layout()->addWidget(ui->toolBar2);
     //Create dialogs
     dlg_resource = new DialogResourceManager(this);
     dlg_resource->setModal(true);
@@ -478,6 +479,11 @@ void MainWindow::update_actions()
         ui->action_Script_Editor->setEnabled(false);
         ui->action_Title_Background->setEnabled(false);
         ui->action_Upper_Layer->setEnabled(false);
+        ui->actionNew_Map->setEnabled(false);
+        ui->actionMap_Properties->setEnabled(false);
+        ui->actionCopy_Map->setEnabled(false);
+        ui->actionPaste_Map->setEnabled(false);
+        ui->actionDelete_Map->setEnabled(false);
     } else {
         ui->actionCircle->setEnabled(true);
         ui->actionCreate_Game_Disk->setEnabled(true);
@@ -502,6 +508,11 @@ void MainWindow::update_actions()
         ui->action_Script_Editor->setEnabled(true);
         ui->action_Title_Background->setEnabled(true);
         ui->action_Upper_Layer->setEnabled(true);
+        ui->actionNew_Map->setEnabled(true);
+        ui->actionMap_Properties->setEnabled(ui->tabMap->count());
+        ui->actionCopy_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
+        ui->actionPaste_Map->setEnabled(false);//Check if there's a copied map
+        ui->actionDelete_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
     }
 }
 
