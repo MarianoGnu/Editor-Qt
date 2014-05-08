@@ -1140,18 +1140,26 @@ void MainWindow::on_actionPaste_Map_triggered()
         return;
     }
 
-    RPG::MapInfo i();
-    i.parent_map = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
-    if (i.parent_map == 0)
-    {
-        i.music_type = RPG::MapInfo::BGMType_terrain;
-        i.background_type = RPG::MapInfo::
-    }
+
     std::auto_ptr<RPG::Map> m = LMU_Reader::LoadXml(m_copiedMap.toStdString());
+    RPG::MapInfo info;
+    for (int i = 0; i < (int) Data::treemap.maps.size(); i++)
+    {
+        if (Data::treemap.maps[i].ID == m->ID)
+        {
+            info = Data::treemap.maps[i];
+            break;
+        }
+    }
+    info.parent_map = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    if (info.parent_map == 0)
+    {
+        //TODO: Check forbiden values when no parent
+    }
     for (int i = 1;;i++)
     {
         bool found = false;
-        for (int j = 0; j < Data::treemap.maps.size(); j++)
+        for (int j = 0; j < (int) Data::treemap.maps.size(); j++)
         {
             if (i == j)
             {
@@ -1162,7 +1170,15 @@ void MainWindow::on_actionPaste_Map_triggered()
         if (!found)
         {
             m->ID = i;
+            info.ID = i;
             break;
         }
     }
+    Data::treemap.maps.push_back(info);
+    //TODO: Rearrange Data::treemap.tree_order
+    //TODO: Add the Tree Widget Item.
+    LMT_Reader::SaveXml(mCore->filePath(ROOT, EASY_MT).toStdString());
+    QString path = mCore->filePath(ROOT, "Map%1.emu");
+    path = path.arg(m->ID, 4, QLatin1Char('0'));
+    LMU_Reader::SaveXml(path.toStdString(), *m.get());
 }
