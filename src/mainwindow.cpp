@@ -511,7 +511,7 @@ void MainWindow::update_actions()
         ui->actionNew_Map->setEnabled(true);
         ui->actionMap_Properties->setEnabled(ui->tabMap->count());
         ui->actionCopy_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
-        ui->actionPaste_Map->setEnabled(false);//Check if there's a copied map
+        ui->actionPaste_Map->setEnabled(!m_copiedMap.isEmpty());
         ui->actionDelete_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
     }
 }
@@ -1102,4 +1102,67 @@ void MainWindow::on_actionRevert_Map_triggered()
 {
     if (currentScene())
         currentScene()->Load();
+}
+
+
+void MainWindow::on_treeMap_itemSelectionChanged()
+{
+    if (!ui->treeMap->currentItem())
+    {
+        ui->actionCopy_Map->setEnabled(false);
+        ui->actionDelete_Map->setEnabled(false);
+        return;
+    }
+    ui->actionCopy_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
+    ui->actionDelete_Map->setEnabled(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0);
+    Data::treemap.active_node = ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt() != 0;
+    LMT_Reader::SaveXml(mCore->filePath(ROOT, EASY_MT).toStdString());
+}
+
+void MainWindow::on_actionCopy_Map_triggered()
+{
+    m_copiedMap = mCore->filePath(ROOT)+"Map%1.emu";
+    m_copiedMap = m_copiedMap.arg(QString::number(ui->treeMap->currentItem()->data(1,Qt::DisplayRole).toInt()),
+                                  4, QLatin1Char('0'));
+    ui->actionPaste_Map->setEnabled(true);
+    return;
+}
+
+void MainWindow::on_actionPaste_Map_triggered()
+{
+    QFileInfo f(m_copiedMap);
+
+    if (!f.exists())
+    {
+        QMessageBox::critical(this,
+                              "File not found",
+                              "The file " + m_copiedMap + " can't be found.");
+        return;
+    }
+
+    RPG::MapInfo i();
+    i.parent_map = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    if (i.parent_map == 0)
+    {
+        i.music_type = RPG::MapInfo::BGMType_terrain;
+        i.background_type = RPG::MapInfo::
+    }
+    std::auto_ptr<RPG::Map> m = LMU_Reader::LoadXml(m_copiedMap.toStdString());
+    for (int i = 1;;i++)
+    {
+        bool found = false;
+        for (int j = 0; j < Data::treemap.maps.size(); j++)
+        {
+            if (i == j)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            m->ID = i;
+            break;
+        }
+    }
 }
