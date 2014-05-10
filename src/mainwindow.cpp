@@ -1200,10 +1200,55 @@ void MainWindow::on_actionPaste_Map_triggered()
         it++;
     }
     Data::treemap.tree_order = tree_order;
+    ui->treeMap->currentItem()->setExpanded(true);
+    ui->treeMap->currentItem()->setSelected(false);
     item->setSelected(true);
     LMT_Reader::SaveXml(mCore->filePath(ROOT, EASY_MT).toStdString());
     QString path = mCore->filePath(ROOT, "Map%1.emu");
     path = path.arg(QString::number(m->ID), 4, QLatin1Char('0'));
     LMU_Reader::SaveXml(path.toStdString(), *m);
     on_treeMap_itemDoubleClicked(item, 0);
+}
+
+void MainWindow::on_actionDelete_Map_triggered()
+{
+
+    int ID = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    QString mapPath = mCore->filePath(ROOT)+"Map%1.emu";
+    mapPath = mapPath.arg(QString::number(ID), 4, QLatin1Char('0'));
+
+    if (QFileInfo(mapPath).exists())
+        QFile::remove(mapPath);
+    else
+        qWarning() << QString("file not found: %1").arg(mapPath);
+
+    for (unsigned int i = 0; i < Data::treemap.maps.size(); i++)
+    {
+        if (Data::treemap.maps[i].ID == ID)
+        {
+            Data::treemap.maps.erase(Data::treemap.maps.begin()+i);
+            break;
+        }
+    }
+
+    for (unsigned int i = 0; i < Data::treemap.tree_order.size(); i++)
+    {
+        if (Data::treemap.tree_order[i] == ID)
+        {
+            Data::treemap.tree_order.erase(Data::treemap.tree_order.begin()+i);
+            break;
+        }
+    }
+
+    QGraphicsView* view = m_views[ID];
+    if (view)
+    {
+        ui->tabMap->removeTab(ui->tabMap->indexOf(view));
+        m_views.remove(ID);
+    }
+
+    LMT_Reader::SaveXml(mCore->filePath(ROOT, EASY_MT).toStdString());
+
+    m_treeItems[ID]->parent()->removeChild(m_treeItems[ID]);
+    m_treeItems.remove(ID);
 }

@@ -105,6 +105,8 @@ private slots:
 
     void on_actionPaste_Map_triggered();
 
+    void on_actionDelete_Map_triggered();
+
 private:
     void closeEvent(QCloseEvent *event);
     bool saveAll();
