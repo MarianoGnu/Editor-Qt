@@ -123,6 +123,7 @@ private:
     QSettings *m_projSett;
     QGraphicsPaleteScene *m_paleteScene;
     QMap<int,QGraphicsView*> m_views;
+    QMap<int,QTreeWidgetItem*> m_treeItems;
     QString m_copiedMap;
 };
 

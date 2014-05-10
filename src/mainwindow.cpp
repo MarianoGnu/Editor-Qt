@@ -182,8 +182,8 @@ void MainWindow::LoadProject(QString foldername)
     root->setIcon(0,QIcon(":/icons/share/old_folder.png"));
     RPG::TreeMap maps = Data::treemap;
     ui->treeMap->addTopLevelItem(root);
-    QMap<int,QTreeWidgetItem*> items;
-    items[0] = root;
+    m_treeItems.clear();
+    m_treeItems[0] = root;
     //Add Items
     for (unsigned int i = 1; i < maps.maps.size(); i++)
     {
@@ -191,7 +191,7 @@ void MainWindow::LoadProject(QString foldername)
         item->setData(1,Qt::DisplayRole,maps.maps[i].ID);
         item->setData(0,Qt::DisplayRole,QString::fromStdString(maps.maps[i].name));
         item->setIcon(0, QIcon(":/icons/share/old_map.png"));
-        items[maps.maps[i].ID] = item;
+        m_treeItems[maps.maps[i].ID] = item;
     }
     //Parent Items
     for (unsigned int i = 0; i < maps.maps.size(); i++)
@@ -204,17 +204,17 @@ void MainWindow::LoadProject(QString foldername)
                 info = maps.maps[j];
                 break;
             }
-        items[info.parent_map]->addChild(items[info.ID]);
+        m_treeItems[info.parent_map]->addChild(m_treeItems[info.ID]);
         if (info.ID == maps.active_node)
         {
-            ui->treeMap->setCurrentItem(items[info.ID]);
-            this->on_treeMap_itemDoubleClicked(items[info.ID], 0);
+            ui->treeMap->setCurrentItem(m_treeItems[info.ID]);
+            this->on_treeMap_itemDoubleClicked(m_treeItems[info.ID], 0);
         }
     }
     //Expand Items
     for (unsigned int i = 0; i < maps.maps.size(); i++)
     {
-        items[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
+        m_treeItems[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
     }
 
     for(int i = 0; i < m_mapList.count(); i++)
@@ -343,8 +343,8 @@ void MainWindow::ImportProject(QString p_path, QString d_folder)
     root->setIcon(0,QIcon(":/icons/share/old_folder.png"));
     RPG::TreeMap maps = Data::treemap;
     ui->treeMap->addTopLevelItem(root);
-    QMap<int,QTreeWidgetItem*> items;
-    items[0] = root;
+    m_treeItems.clear();
+    m_treeItems[0] = root;
     //Add Items
     for (unsigned int i = 1; i < maps.maps.size(); i++)
     {
@@ -352,7 +352,7 @@ void MainWindow::ImportProject(QString p_path, QString d_folder)
         item->setData(1,Qt::DisplayRole,maps.maps[i].ID);
         item->setData(0,Qt::DisplayRole,QString::fromStdString(maps.maps[i].name));
         item->setIcon(0, QIcon(":/icons/share/old_map.png"));
-        items[maps.maps[i].ID] = item;
+        m_treeItems[maps.maps[i].ID] = item;
     }
     //Parent Items
     for (unsigned int i = 0; i < maps.maps.size(); i++)
@@ -365,10 +365,10 @@ void MainWindow::ImportProject(QString p_path, QString d_folder)
                 info = maps.maps[j];
                 break;
             }
-        items[info.parent_map]->addChild(items[info.ID]);
+        m_treeItems[info.parent_map]->addChild(m_treeItems[info.ID]);
         if (info.ID == maps.active_node)
         {
-            ui->treeMap->setCurrentItem(items[info.ID]);
+            ui->treeMap->setCurrentItem(m_treeItems[info.ID]);
             m_mapList.push_back(info.ID);
             m_scaleList.push_back(1.0);
         }
@@ -376,7 +376,7 @@ void MainWindow::ImportProject(QString p_path, QString d_folder)
     //Expand Items
     for (unsigned int i = 0; i < maps.maps.size(); i++)
     {
-        items[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
+        m_treeItems[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
     }
     //Import Maps
     std::stringstream ss;
@@ -409,7 +409,7 @@ void MainWindow::ImportProject(QString p_path, QString d_folder)
     m_projSett->setValue(MAPS, m_mapList);
     m_projSett->setValue(SCALES, m_scaleList);
     m_projSett->setValue(TILESIZE, 16);
-    this->on_treeMap_itemDoubleClicked(items[m_mapList[0].toInt()], 0);
+    this->on_treeMap_itemDoubleClicked(m_treeItems[m_mapList[0].toInt()], 0);
 }
 
 void MainWindow::on_action_Quit_triggered()
@@ -602,8 +602,8 @@ void MainWindow::on_action_New_Project_triggered()
         root->setIcon(0,QIcon(":/icons/share/old_folder.png"));
         RPG::TreeMap maps = Data::treemap;
         ui->treeMap->addTopLevelItem(root);
-        QMap<int,QTreeWidgetItem*> items;
-        items[0] = root;
+        m_treeItems.clear();
+        m_treeItems[0] = root;
         //Add Items
         for (unsigned int i = 1; i < maps.maps.size(); i++)
         {
@@ -611,7 +611,7 @@ void MainWindow::on_action_New_Project_triggered()
             item->setData(1,Qt::DisplayRole,maps.maps[i].ID);
             item->setData(0,Qt::DisplayRole,QString::fromStdString(maps.maps[i].name));
             item->setIcon(0, QIcon(":/icons/share/old_map.png"));
-            items[maps.maps[i].ID] = item;
+            m_treeItems[maps.maps[i].ID] = item;
         }
         //Parent Items
         for (unsigned int i = 0; i < maps.maps.size(); i++)
@@ -624,16 +624,16 @@ void MainWindow::on_action_New_Project_triggered()
                     info = maps.maps[j];
                     break;
                 }
-            items[info.parent_map]->addChild(items[info.ID]);
+            m_treeItems[info.parent_map]->addChild(m_treeItems[info.ID]);
             if (info.ID == maps.active_node)
             {
-                ui->treeMap->setCurrentItem(items[info.ID]);
+                ui->treeMap->setCurrentItem(m_treeItems[info.ID]);
             }
         }
         //Expand Items
         for (unsigned int i = 0; i < maps.maps.size(); i++)
         {
-            items[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
+            m_treeItems[maps.maps[i].ID]->setExpanded(maps.maps[i].expanded_node);
         }
         QGraphicsView *view = getView(1);
         QGraphicsMapScene *scene = getScene(1);
@@ -1154,7 +1154,16 @@ void MainWindow::on_actionPaste_Map_triggered()
     info.parent_map = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
     if (info.parent_map == 0)
     {
-        //TODO: Check forbiden values when no parent
+        if (info.music_type == RPG::MapInfo::MusicType_parent)
+            info.music_type = RPG::MapInfo::MusicType_event;
+        if (info.background_type == RPG::MapInfo::BGMType_parent)
+            info.background_type = RPG::MapInfo::BGMType_terrain;
+        if (info.teleport == RPG::MapInfo::TriState_parent)
+            info.teleport = RPG::MapInfo::TriState_allow;
+        if (info.escape == RPG::MapInfo::TriState_parent)
+            info.escape = RPG::MapInfo::TriState_allow;
+        if (info.save == RPG::MapInfo::TriState_parent)
+            info.save = RPG::MapInfo::TriState_allow;
     }
     for (int i = 1;;i++)
     {
@@ -1171,14 +1180,30 @@ void MainWindow::on_actionPaste_Map_triggered()
         {
             m->ID = i;
             info.ID = i;
+            info.name = tr("MAP%1").arg(QString::number(i),4, QLatin1Char('0')).toStdString();
             break;
         }
     }
     Data::treemap.maps.push_back(info);
-    //TODO: Rearrange Data::treemap.tree_order
-    //TODO: Add the Tree Widget Item.
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setData(1,Qt::DisplayRole,m->ID);
+    item->setData(0,Qt::DisplayRole,QString::fromStdString(info.name));
+    item->setIcon(0, QIcon(":/icons/share/old_map.png"));
+    m_treeItems[m->ID] = item;
+    m_treeItems[info.parent_map]->addChild(item);
+    QTreeWidgetItem *root = m_treeItems[0];
+    QTreeWidgetItemIterator it(root);
+    std::vector<int> tree_order;
+    while (*it)
+    {
+        tree_order.push_back((*it)->data(1, Qt::DisplayRole).toInt());
+        it++;
+    }
+    Data::treemap.tree_order = tree_order;
+    item->setSelected(true);
     LMT_Reader::SaveXml(mCore->filePath(ROOT, EASY_MT).toStdString());
     QString path = mCore->filePath(ROOT, "Map%1.emu");
-    path = path.arg(m->ID, 4, QLatin1Char('0'));
-    LMU_Reader::SaveXml(path.toStdString(), *m.get());
+    path = path.arg(QString::number(m->ID), 4, QLatin1Char('0'));
+    LMU_Reader::SaveXml(path.toStdString(), *m);
+    on_treeMap_itemDoubleClicked(item, 0);
 }
