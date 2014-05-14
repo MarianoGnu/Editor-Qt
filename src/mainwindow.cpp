@@ -1085,13 +1085,6 @@ bool MainWindow::saveAll()
     return true;
 }
 
-
-void MainWindow::on_actionMap_Properties_dialog_triggered()
-{
-    DialogMapProperties dlg(this);
-    dlg.exec();
-}
-
 void MainWindow::on_action_Save_Map_triggered()
 {
     if(currentScene())
@@ -1251,4 +1244,12 @@ void MainWindow::on_actionDelete_Map_triggered()
 
     m_treeItems[ID]->parent()->removeChild(m_treeItems[ID]);
     m_treeItems.remove(ID);
+}
+
+void MainWindow::on_actionMap_Properties_triggered()
+{
+    if (!currentScene())
+        return;
+
+    currentScene()->editMapProperties();
 }

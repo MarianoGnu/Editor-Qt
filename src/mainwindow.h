@@ -93,8 +93,6 @@ private slots:
 
     void on_actionUndo_triggered();
 
-    void on_actionMap_Properties_dialog_triggered();
-
     void on_action_Save_Map_triggered();
 
     void on_actionRevert_Map_triggered();
@@ -106,6 +104,8 @@ private slots:
     void on_actionPaste_Map_triggered();
 
     void on_actionDelete_Map_triggered();
+
+    void on_actionMap_Properties_triggered();
 
 private:
     void closeEvent(QCloseEvent *event);
