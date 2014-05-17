@@ -17,7 +17,14 @@ class DialogMapProperties : public QDialog
     Q_OBJECT
 
 public:
-    explicit DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, QWidget *parent = 0);
+    enum Page
+    {
+        Main    = 0,
+        Areas   = 1,
+        Dungeon = 2
+    };
+
+    explicit DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page p = Main, QWidget *parent = 0);
     ~DialogMapProperties();
 
 private slots:
@@ -36,6 +43,8 @@ private slots:
     void on_groupObstacleC_toggled(bool arg1);
 
     void on_tableEncounters_itemChanged(QTableWidgetItem *item);
+
+    void on_lineListFilter_textChanged(const QString &arg1);
 
 private:
     Ui::DialogMapProperties *ui;

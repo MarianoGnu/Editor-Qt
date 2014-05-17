@@ -10,7 +10,6 @@
 #include "../core.h"
 #include "../DialogEvent.h"
 #include "../dialogrungame.h"
-#include "../dialogmapproperties.h"
 #include "../mainwindow.h"
 #include "qundodraw.h"
 #include "qundoevent.h"
@@ -187,9 +186,9 @@ QMap<int, RPG::Event*> *QGraphicsMapScene::mapEvents()
     return events;
 }
 
-void QGraphicsMapScene::editMapProperties()
+void QGraphicsMapScene::editMapProperties(DialogMapProperties::Page page)
 {
-    DialogMapProperties dlg(n_mapInfo, *m_map, m_view);
+    DialogMapProperties dlg(n_mapInfo, *m_map, page, m_view);
     dlg.exec();
 }
 

@@ -3,13 +3,15 @@
 #include <data.h>
 #include "core.h"
 
-DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, QWidget *parent) :
+DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page p, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogMapProperties),
     m_info(info),
     m_map(map)
 {
     ui->setupUi(this);
+
+    ui->tabWidget->setCurrentIndex(p);
 
     for (int terrain = 0; terrain < 162; terrain++)
         m_generatorLowerLayer.push_back(mCore->translate(terrain, UP+DOWN+LEFT+RIGHT));
@@ -176,7 +178,6 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, QWid
         m_panoramaItem->setPixmap(pix);
     }
 
-    //TODO: Show generator tiles.
     if (info.parent_map == 0)
     {
         ui->radioBackdropParent->setEnabled(false);
@@ -268,4 +269,10 @@ void DialogMapProperties::on_tableEncounters_itemChanged(QTableWidgetItem *item)
         ui->tableEncounters->setItem(ui->tableEncounters->rowCount()-2, 0, n_item);
         item->setData(Qt::DisplayRole, "<Add Encounter>");
     }
+}
+
+void DialogMapProperties::on_lineListFilter_textChanged(const QString &arg1)
+{
+    for (int i = 1; i < ui->listAreas->count(); i++)
+        ui->listAreas->item(i)->setHidden(ui->listAreas->item(i)->text().contains(arg1, Qt::CaseInsensitive));
 }

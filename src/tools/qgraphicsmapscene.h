@@ -13,6 +13,7 @@
 #include <rpg_map.h>
 #include <rpg_mapinfo.h>
 #include "../core.h"
+#include "../dialogmapproperties.h"
 
 class QGraphicsMapScene : public QGraphicsScene
 {
@@ -31,7 +32,7 @@ public:
     void setLayerData(Core::Layer layer, std::vector<short> data);
     void setEventData(int id, const RPG::Event &data);
     QMap<int, RPG::Event *> *mapEvents();
-    void editMapProperties();
+    void editMapProperties(DialogMapProperties::Page page = DialogMapProperties::Main);
 
 signals:
     void actionRunHereTriggered(int map_id, int x, int y);

@@ -107,6 +107,10 @@ private slots:
 
     void on_actionMap_Properties_triggered();
 
+    void on_actionEncounter_Areas_triggered();
+
+    void on_actionDungeon_Generator_triggered();
+
 private:
     void closeEvent(QCloseEvent *event);
     bool saveAll();

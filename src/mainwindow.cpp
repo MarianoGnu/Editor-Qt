@@ -25,6 +25,7 @@
 #include "inireader.h"
 #include "rpg_map.h"
 #include "rpg_mapinfo.h"
+#include "dialogmapproperties.h"
 #include "data.h"
 
 Q_DECLARE_METATYPE(QList<int>)
@@ -1248,8 +1249,30 @@ void MainWindow::on_actionDelete_Map_triggered()
 
 void MainWindow::on_actionMap_Properties_triggered()
 {
-    if (!currentScene())
+    int id = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    if (id == 0)
         return;
 
-    currentScene()->editMapProperties();
+    ui->tabMap->setCurrentWidget(getView(id));
+    currentScene()->editMapProperties(DialogMapProperties::Main);
+}
+
+void MainWindow::on_actionEncounter_Areas_triggered()
+{
+    int id = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    if (id == 0)
+        return;
+
+    ui->tabMap->setCurrentWidget(getView(id));
+    currentScene()->editMapProperties(DialogMapProperties::Areas);
+}
+
+void MainWindow::on_actionDungeon_Generator_triggered()
+{
+    int id = ui->treeMap->currentItem()->data(1, Qt::DisplayRole).toInt();
+    if (id == 0)
+        return;
+
+    ui->tabMap->setCurrentWidget(getView(id));
+    currentScene()->editMapProperties(DialogMapProperties::Dungeon);
 }

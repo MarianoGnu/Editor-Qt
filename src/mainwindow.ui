@@ -153,7 +153,6 @@
    <addaction name="separator"/>
    <addaction name="action_Save_Map"/>
    <addaction name="actionRevert_Map"/>
-   <addaction name="actionMap_Properties"/>
    <addaction name="separator"/>
    <addaction name="action_Lower_Layer"/>
    <addaction name="action_Upper_Layer"/>
@@ -360,6 +359,10 @@
    <addaction name="actionPaste_Map"/>
    <addaction name="separator"/>
    <addaction name="actionDelete_Map"/>
+   <addaction name="separator"/>
+   <addaction name="actionMap_Properties"/>
+   <addaction name="actionEncounter_Areas"/>
+   <addaction name="actionDungeon_Generator"/>
   </widget>
   <action name="action_Open_Project">
    <property name="icon">
@@ -927,6 +930,24 @@
    </property>
    <property name="toolTip">
     <string>Delete selected map.</string>
+   </property>
+  </action>
+  <action name="actionEncounter_Areas">
+   <property name="icon">
+    <iconset resource="Resources.qrc">
+     <normaloff>:/icons/share/old_area.png</normaloff>:/icons/share/old_area.png</iconset>
+   </property>
+   <property name="text">
+    <string>Encounter Areas</string>
+   </property>
+  </action>
+  <action name="actionDungeon_Generator">
+   <property name="icon">
+    <iconset resource="Resources.qrc">
+     <normaloff>:/icons/share/old_dungeon.png</normaloff>:/icons/share/old_dungeon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Dungeon Generator</string>
    </property>
   </action>
  </widget>

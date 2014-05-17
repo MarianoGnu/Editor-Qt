@@ -20,6 +20,8 @@ QWidget *QEncounterDelegate::createEditor(QWidget *parent, const QStyleOptionVie
 void QEncounterDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
     int id = index.model()->data(index, Qt::UserRole).toInt();
+    if (id <= 0)
+        id = 1;
     static_cast<QComboBox*>(editor)->setCurrentIndex(id-1);
 }
 
