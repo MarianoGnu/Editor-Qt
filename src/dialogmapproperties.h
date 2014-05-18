@@ -46,6 +46,10 @@ private slots:
 
     void on_lineListFilter_textChanged(const QString &arg1);
 
+    void on_listAreas_currentRowChanged(int currentRow);
+
+    void on_lineEncounterAreaName_textChanged(const QString &arg1);
+
 private:
     Ui::DialogMapProperties *ui;
 
@@ -56,9 +60,10 @@ private:
     QGraphicsPixmapItem *m_floorAItem;
     QGraphicsPixmapItem *m_floorBItem;
     QGraphicsPixmapItem *m_floorCItem;
-    QGraphicsPixmapItem *m_ObstacleAItem;
-    QGraphicsPixmapItem *m_ObstacleBItem;
-    QGraphicsPixmapItem *m_ObstacleCItem;
+    QGraphicsPixmapItem *m_obstacleAItem;
+    QGraphicsPixmapItem *m_obstacleBItem;
+    QGraphicsPixmapItem *m_obstacleCItem;
+    QGraphicsPolygonItem *m_areaRectItem;
 
     QEncounterDelegate *m_encounterDelegate;
 
@@ -67,6 +72,9 @@ private:
 
     std::vector<short> m_generatorLowerLayer;
     std::vector<short> m_generatorUpperLayer;
+
+    std::vector<RPG::MapInfo> m_areas;
+    int m_currentArea;
 };
 
 #endif // DIALOGMAPPROPERTIES_H

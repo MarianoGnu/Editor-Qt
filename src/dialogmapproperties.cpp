@@ -25,9 +25,9 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     m_floorAItem = new QGraphicsPixmapItem();
     m_floorBItem = new QGraphicsPixmapItem();
     m_floorCItem = new QGraphicsPixmapItem();
-    m_ObstacleAItem = new QGraphicsPixmapItem();
-    m_ObstacleBItem = new QGraphicsPixmapItem();
-    m_ObstacleCItem = new QGraphicsPixmapItem();
+    m_obstacleAItem = new QGraphicsPixmapItem();
+    m_obstacleBItem = new QGraphicsPixmapItem();
+    m_obstacleCItem = new QGraphicsPixmapItem();
 
     ui->lineName->setText(QString::fromStdString(info.name));
     ui->lineBGMname->setText(QString::fromStdString(info.music.name));
@@ -71,14 +71,8 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     ui->radioDungeonOpenRoom->setChecked(map.generator_mode == 3);
     ui->radioDungeonPassage1_1->setChecked(map.generator_tiles == 0);
     ui->radioDungeonPassage2_2->setChecked(map.generator_tiles == 1);
-    for (int i = (int)info.encounters.size() - 1; i >= 0; i--)
-    {
-        QTableWidgetItem * item = new QTableWidgetItem();
-        item->setData(Qt::DisplayRole, QString::fromStdString(Data::troops[info.encounters[i].troop_id-1].name));
-        item->setData(Qt::UserRole, info.encounters[i].troop_id);
-        ui->tableEncounters->insertRow(0);
-        ui->tableEncounters->setItem(0,0,item);
-    }
+
+
     m_encounterDelegate = new QEncounterDelegate(this);
     ui->tableEncounters->setItemDelegate(m_encounterDelegate);
 
@@ -99,9 +93,9 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     ui->graphicsFloorB->scene()->addItem(m_floorBItem);
     ui->graphicsFloorC->scene()->addItem(m_floorCItem);
     ui->graphicsLowerWall->scene()->addItem(m_lowerWallItem);
-    ui->graphicsObstacleA->scene()->addItem(m_ObstacleAItem);
-    ui->graphicsObstacleB->scene()->addItem(m_ObstacleBItem);
-    ui->graphicsObstacleC->scene()->addItem(m_ObstacleCItem);
+    ui->graphicsObstacleA->scene()->addItem(m_obstacleAItem);
+    ui->graphicsObstacleB->scene()->addItem(m_obstacleBItem);
+    ui->graphicsObstacleC->scene()->addItem(m_obstacleCItem);
     ui->graphicsUpperWall->scene()->addItem(m_upperWallItem);
 
 
@@ -150,7 +144,7 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     mCore->renderTile(map.generator_tile_ids[8], QRect(0,32,32,32));
     mCore->renderTile(map.generator_tile_ids[9], QRect(32,32,32,32));
     mCore->endPainting();
-    m_ObstacleAItem->setPixmap(pix);
+    m_obstacleAItem->setPixmap(pix);
 
     pix.fill();
     mCore->beginPainting(pix);
@@ -159,7 +153,7 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     mCore->renderTile(map.generator_tile_ids[12], QRect(0,32,32,32));
     mCore->renderTile(map.generator_tile_ids[13], QRect(32,32,32,32));
     mCore->endPainting();
-    m_ObstacleBItem->setPixmap(pix);
+    m_obstacleBItem->setPixmap(pix);
 
     pix.fill();
     mCore->beginPainting(pix);
@@ -168,7 +162,7 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
     mCore->renderTile(map.generator_tile_ids[16], QRect(0,32,32,32));
     mCore->renderTile(map.generator_tile_ids[17], QRect(32,32,32,32));
     mCore->endPainting();
-    m_ObstacleCItem->setPixmap(pix);
+    m_obstacleCItem->setPixmap(pix);
 
     if (map.parallax_flag)
     {
@@ -186,6 +180,46 @@ DialogMapProperties::DialogMapProperties(RPG::MapInfo &info, RPG::Map &map, Page
         ui->radioSaveParent->setEnabled(false);
         ui->radioEscapeParent->setEnabled(false);
     }
+
+    m_areas.push_back(info);
+    for (int i = 0; i < (int)Data::treemap.maps.size(); i++)
+    {
+        if (Data::treemap.maps[i].parent_map == info.ID && Data::treemap.maps[i].type == 2)
+            m_areas.push_back(Data::treemap.maps[i]);
+    }
+
+    for (int i = 1; i < (int)m_areas.size(); i++)
+    {
+        ui->listAreas->addItem(QString::fromStdString(m_areas[i].name));
+    }
+
+    pix = QPixmap(map.width*16, map.height*16);
+    mCore->beginPainting(pix);
+    for (int y = 0; y < map.height; y++)
+        for (int x = 0; x < map.width; x++)
+        {
+            mCore->renderTile(map.lower_layer[map.width*y+x], QRect(x*16,y*16,16,16));
+            mCore->renderTile(map.upper_layer[map.width*y+x], QRect(x*16,y*16,16,16));
+        }
+    mCore->endPainting();
+
+    ui->graphicsArea->setScene(new QGraphicsScene(this));
+    ui->graphicsArea->scene()->setSceneRect(0, 0, map.width*16, map.height*16);
+    ui->graphicsArea->scene()->addItem(new QGraphicsPixmapItem(pix));
+    QLinearGradient gradient;
+    gradient.setSpread(QGradient::ReflectSpread);
+    gradient.setStart(QPointF(0.51, 0.51));
+    gradient.setFinalStop(QPointF(1.0, 1.0));
+    gradient.setColorAt(0, QColor(252, 252, 252, 200));
+    gradient.setColorAt(0.193182, QColor(249, 249, 249, 75));
+    gradient.setColorAt(1, QColor(240, 240, 240, 50));
+    m_areaRectItem = new QGraphicsPolygonItem();
+    m_areaRectItem->setPolygon(QPolygon(QRect(3, 3, pix.width()-6, pix.height()-6), true));
+    m_areaRectItem->setPen(QPen(Qt::white));
+    m_areaRectItem->setBrush(gradient);
+    ui->graphicsArea->scene()->addItem(m_areaRectItem);
+    m_currentArea = -1;
+    ui->listAreas->setCurrentRow(0);
 }
 
 DialogMapProperties::~DialogMapProperties()
@@ -197,9 +231,9 @@ DialogMapProperties::~DialogMapProperties()
     delete m_floorAItem;
     delete m_floorBItem;
     delete m_floorCItem;
-    delete m_ObstacleAItem;
-    delete m_ObstacleBItem;
-    delete m_ObstacleCItem;
+    delete m_obstacleAItem;
+    delete m_obstacleBItem;
+    delete m_obstacleCItem;
 
     delete ui;
 }
@@ -214,22 +248,22 @@ void DialogMapProperties::on_groupUseGenerator_toggled(bool arg1)
     m_ceilingItem->setVisible(arg1);
     m_lowerWallItem->setVisible(arg1);
     m_floorAItem->setVisible(arg1);
-    m_ObstacleAItem->setVisible(arg1);
+    m_obstacleAItem->setVisible(arg1);
     if (arg1)
     {
         m_upperWallItem->setVisible(ui->groupUpperWall->isChecked());
         m_floorBItem->setVisible(ui->groupFloorB->isChecked());
         m_floorCItem->setVisible(ui->groupFloorC->isChecked());
-        m_ObstacleBItem->setVisible(ui->groupObstacleB->isChecked());
-        m_ObstacleCItem->setVisible(ui->groupObstacleC->isChecked());
+        m_obstacleBItem->setVisible(ui->groupObstacleB->isChecked());
+        m_obstacleCItem->setVisible(ui->groupObstacleC->isChecked());
     }
     else
     {
         m_upperWallItem->setVisible(false);
         m_floorBItem->setVisible(false);
         m_floorCItem->setVisible(false);
-        m_ObstacleBItem->setVisible(false);
-        m_ObstacleCItem->setVisible(false);
+        m_obstacleBItem->setVisible(false);
+        m_obstacleCItem->setVisible(false);
     }
 }
 
@@ -250,12 +284,12 @@ void DialogMapProperties::on_groupFloorC_toggled(bool arg1)
 
 void DialogMapProperties::on_groupObstacleB_toggled(bool arg1)
 {
-    m_ObstacleBItem->setVisible(arg1);
+    m_obstacleBItem->setVisible(arg1);
 }
 
 void DialogMapProperties::on_groupObstacleC_toggled(bool arg1)
 {
-    m_ObstacleCItem->setVisible(arg1);
+    m_obstacleCItem->setVisible(arg1);
 }
 
 void DialogMapProperties::on_tableEncounters_itemChanged(QTableWidgetItem *item)
@@ -274,5 +308,59 @@ void DialogMapProperties::on_tableEncounters_itemChanged(QTableWidgetItem *item)
 void DialogMapProperties::on_lineListFilter_textChanged(const QString &arg1)
 {
     for (int i = 1; i < ui->listAreas->count(); i++)
-        ui->listAreas->item(i)->setHidden(ui->listAreas->item(i)->text().contains(arg1, Qt::CaseInsensitive));
+        ui->listAreas->item(i)->setHidden(ui->listAreas->item(i)->text()
+                                          .contains(arg1, Qt::CaseInsensitive));
+}
+
+void DialogMapProperties::on_listAreas_currentRowChanged(int currentRow)
+{
+    if (m_currentArea >= 0 && m_currentArea < (int)m_areas.size())
+    {
+        //Update changes
+        RPG::MapInfo &area = m_areas[m_currentArea];
+        area.encounters.clear();
+        for (int i = 0; i < ui->tableEncounters->rowCount() - 1; i++)
+        {
+            RPG::Encounter encounter;
+            encounter.ID = i+1;
+            encounter.troop_id = ui->tableEncounters->item(i,0)->data(Qt::UserRole).toInt();
+            area.encounters.push_back(encounter);
+        }
+        //TODO: Update area.area_rect;
+    }
+
+    while (ui->tableEncounters->rowCount() > 1)
+        ui->tableEncounters->removeRow(0);
+    RPG::MapInfo info = m_areas[currentRow];
+    for (int i = (int)info.encounters.size() - 1; i >= 0; i--)
+    {
+        QTableWidgetItem *item = new QTableWidgetItem();
+        item->setData(Qt::DisplayRole, QString::fromStdString(Data::troops[info.encounters[i].troop_id-1].name));
+        item->setData(Qt::UserRole, info.encounters[i].troop_id);
+        ui->tableEncounters->insertRow(0);
+        ui->tableEncounters->setItem(0,0,item);
+    }
+    ui->spinEncontrerRate->setEnabled(currentRow == 0);
+    ui->lineEncounterAreaName->setEnabled(currentRow != 0);
+    ui->lineEncounterAreaName->setText(ui->listAreas->currentItem()->text());
+    if (currentRow == 0)
+        m_areaRectItem->setPolygon(QPolygon(QRect(3, 3, m_map.width*16-6, m_map.height*16-6), true));
+    else
+    {
+        QPolygon p;
+        p.append(QPoint(info.area_rect.l*16+3, info.area_rect.t*16+3));
+        p.append(QPoint(info.area_rect.r*16-3, info.area_rect.t*16+3));
+        p.append(QPoint(info.area_rect.r*16-3, info.area_rect.b*16-3));
+        p.append(QPoint(info.area_rect.l*16+3, info.area_rect.b*16-3));
+        m_areaRectItem->setPolygon(p);
+    }
+    m_currentArea = currentRow;
+}
+
+void DialogMapProperties::on_lineEncounterAreaName_textChanged(const QString &arg1)
+{
+    if (ui->listAreas->currentRow() == 0)
+        return;
+    ui->listAreas->currentItem()->setText(arg1);
+    m_areas[m_currentArea].name = arg1.toStdString();
 }
