@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui multimedia
+QT       += core gui multimedia opengl
 win32:QT += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -62,7 +62,9 @@ SOURCES += src/mainwindow.cpp \
     src/tools/qgraphicscurveitem.cpp \
     src/tools/qactordelegate.cpp \
     src/tools/qencounterdelegate.cpp \
-    src/editorsettings.cpp
+    src/editorsettings.cpp \
+    src/tools/qmapeditor.cpp \
+    src/tiletranslator.cpp
 
 HEADERS  += src/mainwindow.h \
     src/dialogresourcemanager.h \
@@ -112,7 +114,10 @@ HEADERS  += src/mainwindow.h \
     src/tools/qgraphicscurveitem.h \
     src/tools/qactordelegate.h \
     src/tools/qencounterdelegate.h \
-    src/editorsettings.h
+    src/singleton.h \
+    src/editorsettings.h \
+    src/tools/qmapeditor.h \
+    src/tiletranslator.h
 
 FORMS    += src/mainwindow.ui \
     src/dialogresourcemanager.ui \
